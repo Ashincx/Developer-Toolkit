@@ -1,0 +1,98 @@
+.gradient-generator {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 2.5rem;
+}
+
+@media (max-width: 900px) {
+  .gradient-generator {
+    grid-template-columns: 1fr;
+  }
+}
+
+.control-label {
+  display: block;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.actions-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.icon-btn {
+  padding: 0.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stops-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stop-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.stop-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.color-picker-small {
+  -webkit-appearance: none;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  padding: 0;
+  background: transparent;
+}
+
+.color-picker-small::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-picker-small::-webkit-color-swatch {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.color-input-small {
+  width: 80px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+}
+
+.position-input-small {
+  width: 60px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.85rem;
+}
+
+.checkerboard-bg {
+  background-image: linear-gradient(45deg, var(--border-color) 25%, transparent 25%, transparent 75%, var(--border-color) 75%, var(--border-color)), 
+                    linear-gradient(45deg, var(--border-color) 25%, transparent 25%, transparent 75%, var(--border-color) 75%, var(--border-color));
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+}
+
+.gradient-preview-box {
+  width: 100%;
+  height: 100%;
+  min-height: 250px;
+}
