@@ -2,6 +2,7 @@
   display: grid;
   grid-template-columns: 350px 1fr;
   gap: 2.5rem;
+  min-width: 0;
 }
 
 @media (max-width: 900px) {
@@ -14,6 +15,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  min-width: 0;
 }
 
 .controls-header {
@@ -95,6 +97,7 @@ input[type=range]:focus {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-width: 0;
 }
 
 .preview-container {

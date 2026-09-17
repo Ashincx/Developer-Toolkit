@@ -1,6 +1,7 @@
 .tool-layout {
   max-width: 1200px;
   margin: 0 auto;
+  min-width: 0;
 }
 
 .tool-header {
@@ -93,6 +94,7 @@
   border: 1px solid var(--border-color);
   padding: 2rem;
   box-shadow: var(--shadow-md);
+  min-width: 0;
 }
 
 /* Shared Code Output Styles */
@@ -102,6 +104,7 @@
   overflow: hidden;
   margin-top: 1.5rem;
   width: 100%;
+  min-width: 0;
 }
 
 .code-header {
@@ -144,5 +147,22 @@
   font-size: 0.95rem;
   white-space: pre-wrap;
   word-wrap: break-word;
+}
+
+@media (max-width: 768px) {
+  .tool-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .tool-actions-top {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .tool-content {
+    padding: 1.5rem 1rem;
+  }
 }
 

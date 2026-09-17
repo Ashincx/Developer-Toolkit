@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
@@ -15,12 +16,16 @@ import IconCreator from './pages/tools/IconCreator';
 import CSSRootGenerator from './pages/tools/CSSRootGenerator';
 
 function App() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
   return (
     <div className="app-container">
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       
       <main className="main-content">
-        <Topbar />
+        <Topbar toggleSidebar={toggleSidebar} />
         
         <div className="content-area">
           <Routes>

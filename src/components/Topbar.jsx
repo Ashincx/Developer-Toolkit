@@ -1,9 +1,9 @@
-import { Search, Moon, Sun, Command, Lightbulb, X, Check } from 'lucide-react';
+import { Search, Moon, Sun, Command, Lightbulb, X, Check, Menu } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useState } from 'react';
 import './Topbar.css';
 
-const Topbar = () => {
+const Topbar = ({ toggleSidebar }) => {
   const { theme, toggleTheme } = useTheme();
   const [showSuggestModal, setShowSuggestModal] = useState(false);
   const [suggestion, setSuggestion] = useState('');
@@ -44,7 +44,11 @@ const Topbar = () => {
 
   return (
     <header className="topbar">
-      <div className="search-container">
+      <div className="topbar-left">
+        <button className="mobile-menu-btn" onClick={toggleSidebar}>
+          <Menu size={20} />
+        </button>
+        <div className="search-container">
         <Search className="search-icon" size={18} />
         <input 
           type="text" 
@@ -55,6 +59,7 @@ const Topbar = () => {
           <Command size={14} />
           <span>K</span>
         </div>
+      </div>
       </div>
 
       <div className="topbar-actions">
