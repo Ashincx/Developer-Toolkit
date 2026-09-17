@@ -1,4 +1,4 @@
-import { Search, Moon, Sun, Command, Lightbulb, X } from 'lucide-react';
+import { Search, Moon, Sun, Command, Lightbulb, X, Check } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useState } from 'react';
 import './Topbar.css';
@@ -7,13 +7,39 @@ const Topbar = () => {
   const { theme, toggleTheme } = useTheme();
   const [showSuggestModal, setShowSuggestModal] = useState(false);
   const [suggestion, setSuggestion] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [isSent, setIsSent] = useState(false);
 
-  const handleSendSuggestion = () => {
+  const handleSendSuggestion = async () => {
     if (!suggestion.trim()) return;
-    const mailtoUrl = `mailto:ashincmanoj@gmail.com?subject=${encodeURIComponent('Frontend Toolkit Feature Suggestion')}&body=${encodeURIComponent(suggestion)}`;
-    window.location.href = mailtoUrl;
-    setShowSuggestModal(false);
-    setSuggestion('');
+    setIsSending(true);
+    
+    try {
+      const response = await fetch('https://formspree.io/f/xoevqdyo', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ suggestion })
+      });
+      
+      if (response.ok) {
+        setIsSent(true);
+        setTimeout(() => {
+          setShowSuggestModal(false);
+          setSuggestion('');
+          setIsSent(false);
+        }, 2000);
+      } else {
+        alert('Failed to send suggestion. Please try again.');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('An error occurred. Please check your connection and try again.');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -34,7 +60,7 @@ const Topbar = () => {
       <div className="topbar-actions">
         <button onClick={() => setShowSuggestModal(true)} className="suggest-btn" aria-label="Suggest Feature">
           <Lightbulb size={16} />
-          <span>Suggest Feature</span>
+          <span>Suggest a feature</span>
         </button>
         <button onClick={toggleTheme} className="theme-toggle" aria-label="Toggle theme">
           {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
@@ -61,7 +87,14 @@ const Topbar = () => {
             </div>
             <div className="modal-footer">
               <button className="cancel-btn" onClick={() => setShowSuggestModal(false)}>Cancel</button>
-              <button className="send-btn" onClick={handleSendSuggestion} disabled={!suggestion.trim()}>Send Suggestion</button>
+              <button 
+                className="send-btn" 
+                onClick={handleSendSuggestion} 
+                disabled={!suggestion.trim() || isSending || isSent}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}
+              >
+                {isSent ? <><Check size={16} /> Sent!</> : isSending ? 'Sending...' : 'Send Suggestion'}
+              </button>
             </div>
           </div>
         </div>
