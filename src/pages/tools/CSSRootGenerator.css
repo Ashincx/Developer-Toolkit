@@ -188,13 +188,13 @@
 }
 
 /* Component Preview */
-.preview-container {
+.css-root-preview-container {
   margin-top: 12px;
   padding: 20px;
   border-radius: 8px;
   border: 1px solid var(--color-border);
-  background-color: #F8FAFC !important;
-  background-image: none !important;
+  background-color: #F8FAFC;
+  background-image: none;
   display: flex;
   flex-direction: column;
   gap: 20px;

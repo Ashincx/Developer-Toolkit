@@ -144,7 +144,7 @@ const ColorFilterGenerator = () => {
       return <img src={uploadedImage} alt="Uploaded" className="preview-svg" style={filterStyle} />;
     }
     const ActiveIconComponent = icons.find(i => i.name === activeIcon)?.component || Home;
-    return <ActiveIconComponent size={64} className="preview-svg" style={filterStyle} />;
+    return <ActiveIconComponent size={64} className="preview-svg" style={{ color: '#000000', ...filterStyle }} />;
   };
 
   const rgbString = hexToRgbString(targetColor);

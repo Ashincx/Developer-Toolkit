@@ -12,32 +12,25 @@ const Dashboard = () => {
       </div>
 
       <div className="dashboard-content">
-        {categories.map(category => {
-          const categoryTools = tools.filter(t => t.category === category);
-          if (categoryTools.length === 0) return null;
-
-          return (
-            <div key={category} className="tool-category">
-              <h2 className="category-title">{category}</h2>
-              <div className="tools-grid">
-                {categoryTools.map(tool => {
-                  const Icon = Icons[tool.icon] || Icons.Wrench;
-                  return (
-                    <Link to={tool.path} key={tool.id} className="tool-card">
-                      <div className="tool-card-icon">
-                        <Icon size={24} />
-                      </div>
-                      <div className="tool-card-content">
-                        <h3>{tool.name}</h3>
-                        <p>{tool.description}</p>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
+        <div className="tool-category">
+          <h2 className="category-title">All Tools</h2>
+          <div className="tools-grid">
+            {tools.map(tool => {
+              const Icon = Icons[tool.icon] || Icons.Wrench;
+              return (
+                <Link to={tool.path} key={tool.id} className="tool-card">
+                  <div className="tool-card-icon">
+                    <Icon size={24} />
+                  </div>
+                  <div className="tool-card-content">
+                    <h3>{tool.name}</h3>
+                    <p>{tool.description}</p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

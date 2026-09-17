@@ -113,20 +113,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: none;
-  background-color: var(--bg-tertiary);
+  background-color: #f1f5f9;
+  background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 .preview-box {
   width: 250px;
   height: 250px;
-  background-color: var(--bg-secondary);
+  background-color: #ffffff;
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  color: var(--text-secondary);
+  color: #64748b;
   font-size: 1.25rem;
   transition: box-shadow 0.2s ease;
 }

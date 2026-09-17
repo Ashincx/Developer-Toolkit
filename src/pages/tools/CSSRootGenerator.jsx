@@ -330,9 +330,9 @@ const CSSRootGenerator = () => {
             <h3>Component Preview</h3>
             
             {/* Injecting a style tag just for previewing in this component */}
-            <style dangerouslySetInnerHTML={{ __html: `.preview-container { ${cssString.replace(':root {', '').replace('}', '')} }` }} />
+            <style dangerouslySetInnerHTML={{ __html: `.css-root-preview-container { ${cssString.replace(':root {', '').replace('}', '')} }` }} />
             
-            <div className="preview-container">
+            <div className="css-root-preview-container">
               <div className="preview-row">
                 <button className="preview-btn primary">Primary Button</button>
                 <button className="preview-btn secondary">Secondary Button</button>
