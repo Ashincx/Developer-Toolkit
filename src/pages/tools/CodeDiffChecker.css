@@ -1,0 +1,312 @@
+.diff-checker-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  height: 100%;
+}
+
+.diff-checker-header {
+  background-color: var(--bg-secondary);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.diff-checker-header-content h2 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.diff-checker-header-content p {
+  color: var(--text-secondary);
+  margin-bottom: 0;
+}
+
+.diff-checker-controls {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.diff-checker-workspace {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  height: 100%;
+}
+
+@media (max-width: 900px) {
+  .diff-checker-workspace {
+    grid-template-columns: 1fr;
+  }
+  .diff-checker-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}
+
+.editor-pane {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  min-height: 500px;
+}
+
+.pane-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-tertiary);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pane-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.code-editor {
+  flex: 1;
+  min-height: 450px;
+  padding: 1.5rem;
+  background-color: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  border-radius: 0;
+}
+
+.code-editor:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.diff-result-section {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  min-height: 500px;
+}
+
+.diff-view-tabs {
+  margin-bottom: -0.5rem;
+  align-self: flex-start;
+}
+
+.view-mode-toggles {
+  display: inline-flex;
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  padding: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.view-toggle {
+  background: transparent;
+  border: none;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-toggle:hover {
+  color: var(--text-primary);
+}
+
+.view-toggle.active {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.diff-output-container {
+  overflow-x: auto;
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  padding-bottom: 1rem;
+}
+
+.empty-state {
+  color: var(--text-secondary);
+  text-align: center;
+  font-family: 'Outfit', sans-serif;
+  margin: 3rem 0;
+}
+
+/* Split View Styles */
+.diff-split-view {
+  display: flex;
+  flex-direction: column;
+  min-width: 800px; /* Ensure it doesn't squish too much on small screens */
+}
+
+.diff-split-header {
+  display: flex;
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+}
+
+.split-half {
+  flex: 1;
+  padding: 12px 16px;
+}
+
+.split-half:first-child {
+  border-right: 1px solid var(--border-color);
+}
+
+.diff-row {
+  display: flex;
+  width: 100%;
+}
+
+.diff-cell {
+  flex: 1;
+  display: flex;
+  min-width: 0; /* allows text wrapping */
+}
+
+.diff-cell.left {
+  border-right: 1px solid var(--border-color);
+}
+
+.line-num {
+  min-width: 45px;
+  max-width: 45px;
+  text-align: right;
+  padding-right: 10px;
+  color: var(--text-secondary);
+  user-select: none;
+  background-color: var(--bg-tertiary);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.diff-cell.left .line-num {
+  border-right: 1px solid var(--border-color);
+}
+.diff-cell.right .line-num {
+  border-right: 1px solid var(--border-color);
+}
+
+.line-code {
+  padding-left: 8px;
+  padding-right: 8px;
+  white-space: pre-wrap; /* allow wrapping for long lines */
+  word-break: break-all;
+  flex: 1;
+  display: flex;
+}
+
+.line-marker {
+  display: inline-block;
+  width: 20px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+/* Colors for Added / Removed / Empty */
+.diff-cell.added {
+  background-color: rgba(16, 185, 129, 0.1);
+}
+.diff-cell.added .line-code {
+  color: var(--success, #10b981);
+}
+.diff-cell.added .line-num {
+  background-color: rgba(16, 185, 129, 0.15);
+}
+
+.diff-cell.removed {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+.diff-cell.removed .line-code {
+  color: var(--danger, #ef4444);
+}
+.diff-cell.removed .line-num {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+.diff-cell.empty {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+[data-theme='dark'] .diff-cell.empty {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.diff-cell.unchanged .line-code {
+  color: var(--text-primary);
+}
+
+
+/* Unified View Styles */
+.diff-unified-view {
+  display: flex;
+  flex-direction: column;
+  min-width: 400px;
+}
+
+.diff-unified-row {
+  display: flex;
+  width: 100%;
+}
+
+.line-nums {
+  display: flex;
+  flex-shrink: 0;
+  background-color: var(--bg-tertiary);
+  border-right: 1px solid var(--border-color);
+}
+
+.diff-unified-row.added {
+  background-color: rgba(16, 185, 129, 0.1);
+}
+.diff-unified-row.added .line-code {
+  color: var(--success, #10b981);
+}
+.diff-unified-row.added .line-nums {
+  background-color: rgba(16, 185, 129, 0.15);
+}
+
+.diff-unified-row.removed {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+.diff-unified-row.removed .line-code {
+  color: var(--danger, #ef4444);
+}
+.diff-unified-row.removed .line-nums {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+.diff-unified-row.unchanged .line-code {
+  color: var(--text-primary);
+}

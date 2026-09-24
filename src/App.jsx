@@ -14,6 +14,10 @@ import DevicePreview from './pages/tools/DevicePreview';
 import HtmlToReactConverter from './pages/tools/HtmlToReactConverter';
 import IconCreator from './pages/tools/IconCreator';
 import CSSRootGenerator from './pages/tools/CSSRootGenerator';
+import CSSClipPathGenerator from './pages/tools/CSSClipPathGenerator';
+import CSSGradientMeshGenerator from './pages/tools/CSSGradientMeshGenerator';
+import FileFormatConverter from './pages/tools/FileFormatConverter';
+import CodeDiffChecker from './pages/tools/CodeDiffChecker';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -41,6 +45,10 @@ function App() {
             <Route path="/html-to-react" element={<HtmlToReactConverter />} />
             <Route path="/icon-creator" element={<IconCreator />} />
             <Route path="/css-root-generator" element={<CSSRootGenerator />} />
+            <Route path="/clip-path" element={<CSSClipPathGenerator />} />
+            <Route path="/mesh-gradient" element={<CSSGradientMeshGenerator />} />
+            <Route path="/file-converter" element={<FileFormatConverter />} />
+            <Route path="/code-diff-checker" element={<CodeDiffChecker />} />
           </Routes>
         </div>
       </main>

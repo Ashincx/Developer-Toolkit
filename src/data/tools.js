@@ -1,6 +1,22 @@
 export const tools = [
   // CSS Tools
   {
+    id: 'mesh-gradient',
+    name: 'Gradient Mesh Generator',
+    description: 'Create beautiful mesh gradients visually and generate ready-to-use CSS.',
+    category: 'CSS Tools',
+    path: '/mesh-gradient',
+    icon: 'Sparkles'
+  },
+  {
+    id: 'clip-path',
+    name: 'Clip-Path Generator',
+    description: 'Create custom CSS clip-path shapes visually and generate ready-to-use CSS.',
+    category: 'CSS Tools',
+    path: '/clip-path',
+    icon: 'Scissors'
+  },
+  {
     id: 'css-filter',
     name: 'CSS Filter Generator',
     description: 'Generate CSS filter properties visually.',
@@ -91,6 +107,23 @@ export const tools = [
     category: 'Color & Theme Tools',
     path: '/css-root-generator',
     icon: 'Palette'
+  },
+  // Utilities
+  {
+    id: 'code-diff-checker',
+    name: 'Code Diff Checker',
+    description: 'Compare two blocks of code to see what was added, removed, or changed.',
+    category: 'Utilities',
+    path: '/code-diff-checker',
+    icon: 'GitCompare'
+  },
+  {
+    id: 'file-converter',
+    name: 'File Format Converter',
+    description: 'Convert files between popular formats quickly and securely.',
+    category: 'Utilities',
+    path: '/file-converter',
+    icon: 'FileDown'
   }
 ];
 
@@ -99,5 +132,6 @@ export const categories = [
   'Color & Theme Tools',
   'Responsive Tools',
   'Code Converters',
-  'Icon Tools'
+  'Icon Tools',
+  'Utilities'
 ];

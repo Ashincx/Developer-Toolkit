@@ -3,6 +3,7 @@ import ToolLayout from '../../components/ToolLayout';
 import { Copy, RefreshCw, Check } from 'lucide-react';
 import { useToolHistory } from '../../hooks/useToolHistory';
 import './CSSFilterGenerator.css';
+import vibrantLandscape from '../../assets/vibrant_landscape.jpg';
 
 const defaultFilters = {
   brightness: 100,
@@ -146,7 +147,7 @@ const CSSFilterGenerator = () => {
         <div className="generator-preview-area">
           <div className="preview-container">
             <img 
-              src="https://images.unsplash.com/photo-1605379399642-870262d3d051?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80" 
+              src={vibrantLandscape} 
               alt="Preview" 
               className="preview-image"
               style={{ filter: getFilterString() }}
