@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { tools, categories } from '../data/tools';
-import { Settings, Home, Star, Clock, X } from 'lucide-react';
+import { Settings, Home, X } from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -28,18 +28,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               <NavLink to="/" className={({isActive}) => isActive ? 'nav-item active' : 'nav-item'} onClick={handleClose}>
                 <Home size={18} />
                 <span>Dashboard</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/favorites" className={({isActive}) => isActive ? 'nav-item active' : 'nav-item'} onClick={handleClose}>
-                <Star size={18} />
-                <span>Favorites</span>
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/recent" className={({isActive}) => isActive ? 'nav-item active' : 'nav-item'} onClick={handleClose}>
-                <Clock size={18} />
-                <span>Recent</span>
               </NavLink>
             </li>
           </ul>
