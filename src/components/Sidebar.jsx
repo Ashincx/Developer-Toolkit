@@ -45,25 +45,17 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           </ul>
         </div>
 
-        {categories.map(category => {
-          const categoryTools = tools.filter(t => t.category === category);
-          if (categoryTools.length === 0) return null;
-
-          return (
-            <div key={category} className="nav-section">
-              <h3 className="nav-section-title">{category}</h3>
-              <ul className="nav-list">
-                {categoryTools.map(tool => (
-                  <li key={tool.id}>
-                    <NavLink to={tool.path} className={({isActive}) => isActive ? 'nav-item active' : 'nav-item'} onClick={handleClose}>
-                      <span>{tool.name}</span>
-                    </NavLink>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        })}
+        <div className="nav-section">
+          <ul className="nav-list">
+            {tools.map(tool => (
+              <li key={tool.id}>
+                <NavLink to={tool.path} className={({isActive}) => isActive ? 'nav-item active' : 'nav-item'} onClick={handleClose}>
+                  <span>{tool.name}</span>
+                </NavLink>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
       
       <div className="sidebar-footer">
