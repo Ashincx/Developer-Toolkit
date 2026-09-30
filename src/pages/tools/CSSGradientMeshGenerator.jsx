@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ToolLayout from '../../components/ToolLayout';
-import { Copy, Check, Plus, Trash2, Shuffle, Pipette } from 'lucide-react';
+import { Copy, Check, Plus, Trash2, Shuffle, Pipette, Grid, Maximize2, Minimize2, Eye, Edit2 } from 'lucide-react';
 import './CSSGradientMeshGenerator.css';
 
 const PRESETS = [
@@ -40,6 +40,12 @@ const CSSGradientMeshGenerator = () => {
   const canvasRef = useRef(null);
   const [dragIndex, setDragIndex] = useState(null);
   const [selectedPoint, setSelectedPoint] = useState(null);
+  const [hoverPoint, setHoverPoint] = useState(null);
+
+  // View state
+  const [mode, setMode] = useState('edit');
+  const [showGrid, setShowGrid] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // History (Undo/Redo)
   const [history, setHistory] = useState([{ points: JSON.parse(JSON.stringify(points)), baseColor }]);
@@ -53,23 +59,23 @@ const CSSGradientMeshGenerator = () => {
     setHistoryIndex(newHistory.length - 1);
   }, [history, historyIndex]);
 
-  const undo = () => {
+  const undo = useCallback(() => {
     if (historyIndex > 0) {
       setHistoryIndex(historyIndex - 1);
       const state = history[historyIndex - 1];
       setPoints(JSON.parse(JSON.stringify(state.points)));
       setBaseColor(state.baseColor);
     }
-  };
+  }, [history, historyIndex]);
 
-  const redo = () => {
+  const redo = useCallback(() => {
     if (historyIndex < history.length - 1) {
       setHistoryIndex(historyIndex + 1);
       const state = history[historyIndex + 1];
       setPoints(JSON.parse(JSON.stringify(state.points)));
       setBaseColor(state.baseColor);
     }
-  };
+  }, [history, historyIndex]);
 
   const handleReset = () => {
     const defaultPoints = [
@@ -84,28 +90,53 @@ const CSSGradientMeshGenerator = () => {
   };
 
   // Generate the background value
-  const getBackgroundValue = () => {
-    // Generate radial gradients for each point
-    const gradients = points.map(p => {
-      // Intesity dictates how far the color spreads before becoming transparent.
-      const spread = p.intensity; 
-      return `radial-gradient(at ${Math.round(p.x)}% ${Math.round(p.y)}%, ${p.color} 0px, transparent ${spread}%)`;
+  const generateGradientCSS = (pts, bgColor, compact) => {
+    const gradients = pts.map(p => {
+      let c1, c2, c3;
+      if (p.color.startsWith('#')) {
+        let hex = p.color.replace('#', '');
+        if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+        const r = parseInt(hex.substring(0,2), 16);
+        const g = parseInt(hex.substring(2,4), 16);
+        const b = parseInt(hex.substring(4,6), 16);
+        c1 = `rgba(${r}, ${g}, ${b}, 1)`;
+        c2 = `rgba(${r}, ${g}, ${b}, 0.8)`;
+        c3 = `rgba(${r}, ${g}, ${b}, 0.4)`;
+      } else if (p.color.startsWith('hsl')) {
+        const match = p.color.match(/hsl\((.*?)\)/);
+        if (match) {
+          const vals = match[1];
+          c1 = `hsla(${vals}, 1)`;
+          c2 = `hsla(${vals}, 0.8)`;
+          c3 = `hsla(${vals}, 0.4)`;
+        } else {
+          c1 = c2 = c3 = p.color;
+        }
+      } else {
+        c1 = c2 = c3 = p.color;
+      }
+
+      const s1 = 0;
+      const s2 = Math.round(p.intensity * 0.25);
+      const s3 = Math.round(p.intensity * 0.5);
+      const s4 = p.intensity;
+
+      const stops = `${c1} ${s1}%, ${c2} ${s2}%, ${c3} ${s3}%, transparent ${s4}%`;
+      return `radial-gradient(circle at ${Math.round(p.x)}% ${Math.round(p.y)}%, ${stops})`;
     });
     
-    // Add base color at the end
-    if (baseColor && baseColor !== 'transparent') {
-      gradients.push(baseColor);
-    }
+    const bgString = gradients.join(compact ? ', ' : ',\n    ');
     
-    return gradients.join(settings.compactCSS ? ',' : ',\n    ');
+    if (bgColor && bgColor !== 'transparent') {
+      return compact ? `${bgString}, ${bgColor}` : `${bgString},\n    ${bgColor}`;
+    }
+    return bgString;
   };
 
-  const backgroundValue = getBackgroundValue();
+  const backgroundValue = generateGradientCSS(points, baseColor, settings.compactCSS);
 
   // Generate CSS based on format
   const getFullCSS = () => {
-    const propName = animation.enabled ? 'background' : 'background'; // We'll just use background
-    
     let cssText = '';
     
     if (cssFormat === 'property') {
@@ -155,7 +186,7 @@ const CSSGradientMeshGenerator = () => {
       let numValue = parseInt(value, 10);
       if (isNaN(numValue)) numValue = 0;
       if (numValue < 0) numValue = 0;
-      if (numValue > 150) numValue = 150; // allow some overshoot for intensity
+      if (numValue > 150) numValue = 150;
       newPoints[index][field] = numValue;
     }
     
@@ -167,7 +198,6 @@ const CSSGradientMeshGenerator = () => {
     if (points.length >= 12) return;
     const newPoints = [...points];
     const newId = points.length > 0 ? Math.max(...points.map(p => p.id)) + 1 : 1;
-    // Add point in center
     newPoints.push({
       id: newId,
       x: 50,
@@ -177,11 +207,11 @@ const CSSGradientMeshGenerator = () => {
     });
     setPoints(newPoints);
     setSelectedPoint(newPoints.length - 1);
+    setMode('edit');
     saveToHistory(newPoints, baseColor);
   };
 
   const deletePoint = (index) => {
-    if (points.length <= 2) return; // Min 2 points
     const newPoints = points.filter((_, i) => i !== index);
     setPoints(newPoints);
     if (selectedPoint === index) setSelectedPoint(null);
@@ -196,7 +226,6 @@ const CSSGradientMeshGenerator = () => {
     saveToHistory(newPoints, preset.baseColor);
   };
 
-  // Randomizer
   const randomize = () => {
     const numPoints = Math.floor(Math.random() * 4) + 3; // 3 to 6 points
     const baseHue = Math.floor(Math.random() * 360);
@@ -206,18 +235,17 @@ const CSSGradientMeshGenerator = () => {
     
     const newPoints = [];
     for (let i = 0; i < numPoints; i++) {
-      // Triadic or analogous harmony
       const hueOffset = (i * (Math.random() > 0.5 ? 30 : 120)) % 360;
       const hue = (baseHue + hueOffset) % 360;
-      const s = Math.floor(Math.random() * 40) + 60; // 60-100%
-      const l = Math.floor(Math.random() * 30) + (isDark ? 40 : 50); // 40-70% or 50-80%
+      const s = Math.floor(Math.random() * 40) + 60;
+      const l = Math.floor(Math.random() * 30) + (isDark ? 40 : 50);
       
       newPoints.push({
         id: i + 1,
         x: Math.floor(Math.random() * 100),
         y: Math.floor(Math.random() * 100),
         color: `hsl(${hue}, ${s}%, ${l}%)`,
-        intensity: Math.floor(Math.random() * 40) + 40 // 40-80%
+        intensity: Math.floor(Math.random() * 40) + 40
       });
     }
     
@@ -228,7 +256,8 @@ const CSSGradientMeshGenerator = () => {
 
   // Dragging Logic
   const handlePointerDown = (e, index) => {
-    e.preventDefault(); // prevent scrolling
+    e.preventDefault();
+    if (mode !== 'edit') setMode('edit');
     setDragIndex(index);
     setSelectedPoint(index);
     e.target.setPointerCapture(e.pointerId);
@@ -238,8 +267,8 @@ const CSSGradientMeshGenerator = () => {
     if (dragIndex === null || !canvasRef.current) return;
     
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = Math.max(-10, Math.min(110, ((e.clientX - rect.left) / rect.width) * 100));
-    const y = Math.max(-10, Math.min(110, ((e.clientY - rect.top) / rect.height) * 100));
+    const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
     
     const newPoints = [...points];
     newPoints[dragIndex] = { ...newPoints[dragIndex], x, y };
@@ -250,30 +279,71 @@ const CSSGradientMeshGenerator = () => {
     if (dragIndex !== null) {
       e.target.releasePointerCapture(e.pointerId);
       setDragIndex(null);
-      saveToHistory(points, baseColor); // save only at the end of drag
+      saveToHistory(points, baseColor);
     }
   };
 
   // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Undo/Redo
       if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
         if (e.shiftKey) {
           redo();
         } else {
           undo();
         }
+        return;
+      }
+      
+      // Fullscreen exit
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+        return;
+      }
+
+      // Point movement
+      if (selectedPoint !== null && points[selectedPoint] && mode === 'edit') {
+        const step = e.shiftKey ? 5 : 1;
+        let dx = 0;
+        let dy = 0;
+        if (e.key === 'ArrowUp') dy = -step;
+        if (e.key === 'ArrowDown') dy = step;
+        if (e.key === 'ArrowLeft') dx = -step;
+        if (e.key === 'ArrowRight') dx = step;
+        
+        if (dx !== 0 || dy !== 0) {
+          e.preventDefault();
+          const newPoints = [...points];
+          newPoints[selectedPoint] = {
+            ...newPoints[selectedPoint],
+            x: Math.max(0, Math.min(100, newPoints[selectedPoint].x + dx)),
+            y: Math.max(0, Math.min(100, newPoints[selectedPoint].y + dy))
+          };
+          setPoints(newPoints);
+        }
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  });
+    
+    const handleKeyUp = (e) => {
+      if (selectedPoint !== null && points[selectedPoint] && mode === 'edit') {
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+          saveToHistory(points, baseColor);
+        }
+      }
+    };
 
-  // Calculate dynamic animation style if enabled
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [points, selectedPoint, baseColor, isFullscreen, mode, undo, redo, saveToHistory]);
+
   const getPreviewStyle = () => {
     const style = {
-      backgroundColor: baseColor,
-      backgroundImage: backgroundValue,
+      background: backgroundValue,
     };
     
     if (settings.blur > 0) {
@@ -281,8 +351,6 @@ const CSSGradientMeshGenerator = () => {
     }
     
     if (animation.enabled) {
-      // In a real scenario, this would use CSS keyframes. 
-      // For preview purposes, we'll use a very large background size and animate position.
       style.backgroundSize = '200% 200%';
       const speedMap = { 'Slow': '15s', 'Medium': '8s', 'Fast': '4s' };
       style.animation = `meshGradientMove ${speedMap[animation.speed]} ease-in-out infinite alternate`;
@@ -291,7 +359,6 @@ const CSSGradientMeshGenerator = () => {
     return style;
   };
 
-  // Ensure style blocks are injected for animation if enabled
   useEffect(() => {
     if (animation.enabled) {
       let styleEl = document.getElementById('mesh-anim-style');
@@ -319,12 +386,10 @@ const CSSGradientMeshGenerator = () => {
         {/* LEFT COLUMN: Controls */}
         <div className="generator-sidebar">
           
-          {/* Top Actions: Randomize */}
           <button className="add-point-btn" onClick={randomize} style={{ borderStyle: 'solid', background: 'var(--accent-glow)' }}>
             <Shuffle size={16} /> Randomize Gradient
           </button>
 
-          {/* Points List */}
           <div className="controls-card">
             <h3>
               Gradient Points
@@ -336,7 +401,7 @@ const CSSGradientMeshGenerator = () => {
                 <div 
                   className={`point-row ${selectedPoint === index ? 'selected' : ''}`} 
                   key={point.id}
-                  onClick={() => setSelectedPoint(index)}
+                  onClick={() => { setSelectedPoint(index); setMode('edit'); }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '0.75rem' }}>
                     <input 
@@ -367,7 +432,6 @@ const CSSGradientMeshGenerator = () => {
                     <button 
                       className="delete-btn" 
                       onClick={(e) => { e.stopPropagation(); deletePoint(index); }}
-                      disabled={points.length <= 2}
                       title="Delete Point"
                     >
                       <Trash2 size={16} />
@@ -386,7 +450,6 @@ const CSSGradientMeshGenerator = () => {
             </button>
           </div>
 
-          {/* Background Settings */}
           <div className="controls-card">
             <h3>Background Settings</h3>
             <div className="color-input-wrapper">
@@ -420,7 +483,6 @@ const CSSGradientMeshGenerator = () => {
             </div>
           </div>
 
-          {/* Animation Mode */}
           <div className="controls-card">
             <h3>Animation</h3>
             <div className="toggle-group">
@@ -452,12 +514,10 @@ const CSSGradientMeshGenerator = () => {
             )}
           </div>
 
-          {/* Presets */}
           <div className="controls-card">
             <h3>Presets</h3>
             <div className="presets-grid">
               {PRESETS.map((preset, idx) => {
-                // Generate a mini background for the preset
                 const miniBg = preset.points.map(p => `radial-gradient(at ${p.x}% ${p.y}%, ${p.color} 0px, transparent ${p.intensity}%)`).join(',') + `, ${preset.baseColor}`;
                 return (
                   <button key={idx} className="preset-btn" onClick={() => loadPreset(preset)}>
@@ -474,75 +534,139 @@ const CSSGradientMeshGenerator = () => {
         {/* RIGHT COLUMN: Preview & Code */}
         <div className="generator-main">
           
-          {/* Live Preview Area */}
-          <div className="preview-card">
-            <div className="preview-header">
-              <h3>Live Canvas</h3>
-              <div className="preview-controls">
-                <div className="aspect-ratio-toggles" style={{ display: 'flex', gap: '0.25rem', background: 'var(--bg-tertiary)', padding: '0.25rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-                  {['16/9', '4/3', '1/1', 'auto'].map(ratio => (
-                    <button
-                      key={ratio}
-                      onClick={() => setSettings({...settings, aspectRatio: ratio})}
-                      style={{
-                        padding: '0.2rem 0.6rem',
-                        fontSize: '0.8rem',
-                        background: settings.aspectRatio === ratio ? 'var(--accent-primary)' : 'transparent',
-                        color: settings.aspectRatio === ratio ? 'white' : 'var(--text-secondary)',
-                        border: 'none',
-                        borderRadius: 'calc(var(--radius-sm) - 2px)',
-                        cursor: 'pointer',
-                        fontWeight: 500
-                      }}
+          <div className={`preview-card ${isFullscreen ? 'fullscreen-mode' : ''}`}>
+            {!isFullscreen && (
+              <div className="preview-header">
+                <div className="preview-mode-toggle">
+                  <button 
+                    className={`mode-btn ${mode === 'edit' ? 'active' : ''}`}
+                    onClick={() => setMode('edit')}
+                  >
+                    <Edit2 size={14} /> Edit Points
+                  </button>
+                  <button 
+                    className={`mode-btn ${mode === 'preview' ? 'active' : ''}`}
+                    onClick={() => setMode('preview')}
+                  >
+                    <Eye size={14} /> Preview
+                  </button>
+                </div>
+                
+                <div className="preview-controls">
+                  <div className="aspect-ratio-toggles" style={{ display: 'flex', gap: '0.25rem', background: 'var(--bg-tertiary)', padding: '0.25rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+                    {['16/9', '4/3', '1/1', 'auto'].map(ratio => (
+                      <button
+                        key={ratio}
+                        onClick={() => setSettings({...settings, aspectRatio: ratio})}
+                        style={{
+                          padding: '0.2rem 0.6rem',
+                          fontSize: '0.8rem',
+                          background: settings.aspectRatio === ratio ? 'var(--accent-primary)' : 'transparent',
+                          color: settings.aspectRatio === ratio ? 'white' : 'var(--text-secondary)',
+                          border: 'none',
+                          borderRadius: 'calc(var(--radius-sm) - 2px)',
+                          cursor: 'pointer',
+                          fontWeight: 500
+                        }}
+                      >
+                        {ratio === 'auto' ? 'Auto' : ratio.replace('/', ':')}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="icon-tools">
+                    <button 
+                      className={`icon-btn ${showGrid && mode === 'edit' ? 'active' : ''}`} 
+                      onClick={() => setShowGrid(!showGrid)}
+                      title="Toggle Grid"
+                      disabled={mode === 'preview'}
                     >
-                      {ratio === 'auto' ? 'Auto' : ratio.replace('/', ':')}
+                      <Grid size={16} />
                     </button>
-                  ))}
+                    <button 
+                      className="icon-btn" 
+                      onClick={() => setIsFullscreen(true)}
+                      title="Fullscreen"
+                    >
+                      <Maximize2 size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
             
             <div 
-              className="preview-wrapper canvas-checkerboard"
+              className={`preview-wrapper ${points.length === 0 ? 'empty' : 'canvas-checkerboard'} ${isFullscreen ? 'fullscreen' : ''}`}
               style={{
-                aspectRatio: settings.aspectRatio === 'auto' ? 'unset' : settings.aspectRatio,
+                aspectRatio: isFullscreen ? 'unset' : (settings.aspectRatio === 'auto' ? 'unset' : settings.aspectRatio),
                 minHeight: settings.aspectRatio === 'auto' ? '400px' : 'auto'
               }}
             >
-              <div 
-                className="interactive-canvas" 
-                ref={canvasRef}
-              >
-                {/* The generated mesh gradient */}
-                <div 
-                  className="mesh-shape" 
-                  style={getPreviewStyle()}
-                />
+              {isFullscreen && (
+                <button className="exit-fullscreen-btn" onClick={() => setIsFullscreen(false)} title="Exit Fullscreen (Esc)">
+                  <Minimize2 size={20} />
+                </button>
+              )}
 
-                {/* SVG Overlay for drawing draggable nodes */}
-                <svg className="canvas-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  {points.map((point, index) => (
-                    <circle
-                      key={point.id}
-                      cx={`${point.x}`}
-                      cy={`${point.y}`}
-                      r={selectedPoint === index ? 6 : 4}
-                      className={`canvas-point ${selectedPoint === index ? 'selected' : ''}`}
-                      style={{ 
-                        fill: point.color, 
-                        stroke: selectedPoint === index ? '#fff' : 'rgba(255,255,255,0.5)'
-                      }}
-                      onPointerDown={(e) => handlePointerDown(e, index)}
-                      onPointerMove={handlePointerMove}
-                      onPointerUp={handlePointerUp}
-                    />
-                  ))}
-                </svg>
-              </div>
+              {points.length === 0 ? (
+                <div className="empty-canvas-state">
+                  <p>Add a color point to start building your mesh</p>
+                  <button className="add-point-btn-small" onClick={addPoint}>
+                    <Plus size={14} /> Add Color Point
+                  </button>
+                </div>
+              ) : (
+                <div 
+                  className="interactive-canvas" 
+                  ref={canvasRef}
+                >
+                  <div 
+                    className="mesh-shape" 
+                    style={getPreviewStyle()}
+                  />
+
+                  {showGrid && mode === 'edit' && (
+                    <div className="canvas-grid-overlay" />
+                  )}
+
+                  {mode === 'edit' && (
+                    <div className="canvas-handles-layer">
+                      {points.map((point, index) => (
+                        <div
+                          key={point.id}
+                          className={`canvas-point-handle ${selectedPoint === index ? 'selected' : ''} ${dragIndex === index ? 'dragging' : ''}`}
+                          style={{
+                            left: `${point.x}%`,
+                            top: `${point.y}%`,
+                            '--point-color': point.color
+                          }}
+                          onPointerDown={(e) => handlePointerDown(e, index)}
+                          onPointerMove={handlePointerMove}
+                          onPointerUp={handlePointerUp}
+                          onPointerEnter={() => setHoverPoint(index)}
+                          onPointerLeave={() => setHoverPoint(null)}
+                          tabIndex={0}
+                          onFocus={() => setSelectedPoint(index)}
+                          aria-label={`Gradient Point ${index + 1}`}
+                        >
+                          <div className="handle-center"></div>
+                          {(selectedPoint === index || hoverPoint === index) && (
+                            <div className="handle-tooltip">
+                              <div className="tooltip-title">Point {String(index + 1).padStart(2, '0')}</div>
+                              <div className="tooltip-stat">X: {Math.round(point.x)}%</div>
+                              <div className="tooltip-stat">Y: {Math.round(point.y)}%</div>
+                              <div className="tooltip-stat">Spread: {point.intensity}%</div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Generated CSS */}
           <div className="code-card">
             <div className="code-header">
               <h3>Generated CSS</h3>
