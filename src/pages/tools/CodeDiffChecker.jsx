@@ -1,264 +1,186 @@
-import React, { useState } from 'react';
-import * as Icons from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { ArrowDownUp, Check, ChevronDown, Clipboard, Code2, Columns2, CornerDownRight, RotateCcw, Sparkles } from 'lucide-react';
+import { compareLines, createPatch, splitLines } from '../../utils/codeDiff';
 import './CodeDiffChecker.css';
 
-const CodeDiffChecker = () => {
-  const [originalCode, setOriginalCode] = useState('');
-  const [modifiedCode, setModifiedCode] = useState('');
-  const [diffResult, setDiffResult] = useState([]);
-  const [isComparing, setIsComparing] = useState(false);
-  const [viewMode, setViewMode] = useState('split'); // 'split' or 'unified'
+const exampleOriginal = `function formatPrice(amount) {
+  const currency = "USD";
+  const rounded = amount.toFixed(2);
+  return currency + " " + rounded;
+}
 
-  const computeDiff = () => {
-    if (!originalCode && !modifiedCode) {
-      setDiffResult([]);
-      setIsComparing(true);
-      return;
-    }
+export default formatPrice;`;
 
-    const lines1 = originalCode.split('\n');
-    const lines2 = modifiedCode.split('\n');
-    
-    // Create DP matrix for LCS (Longest Common Subsequence)
-    const dp = Array(lines1.length + 1).fill(null).map(() => Array(lines2.length + 1).fill(0));
-    for (let i = 1; i <= lines1.length; i++) {
-      for (let j = 1; j <= lines2.length; j++) {
-        if (lines1[i - 1] === lines2[j - 1]) {
-          dp[i][j] = dp[i - 1][j - 1] + 1;
-        } else {
-          dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-        }
-      }
-    }
+const exampleUpdated = `function formatPrice(amount, currency = "USD") {
+  const rounded = Number(amount).toFixed(2);
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  }).format(rounded);
+}
 
-    const result = [];
-    let i = lines1.length;
-    let j = lines2.length;
-    let origLineNum = lines1.length;
-    let modLineNum = lines2.length;
+export default formatPrice;`;
 
-    while (i > 0 || j > 0) {
-      if (i > 0 && j > 0 && lines1[i - 1] === lines2[j - 1]) {
-        result.unshift({
-          left: { type: 'unchanged', value: lines1[i - 1], lineNum: origLineNum },
-          right: { type: 'unchanged', value: lines2[j - 1], lineNum: modLineNum }
-        });
-        i--;
-        j--;
-        origLineNum--;
-        modLineNum--;
-      } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-        result.unshift({
-          left: { type: 'empty', value: ' ', lineNum: null },
-          right: { type: 'added', value: lines2[j - 1], lineNum: modLineNum }
-        });
-        j--;
-        modLineNum--;
-      } else if (i > 0 && (j === 0 || dp[i][j - 1] < dp[i - 1][j])) {
-        result.unshift({
-          left: { type: 'removed', value: lines1[i - 1], lineNum: origLineNum },
-          right: { type: 'empty', value: ' ', lineNum: null }
-        });
-        i--;
-        origLineNum--;
-      }
-    }
+function highlightedText(text, other) {
+  if (other === undefined || text === other) return text || ' ';
+  let start = 0;
+  let end = 0;
+  while (start < text.length && start < other.length && text[start] === other[start]) start++;
+  while (end < text.length - start && end < other.length - start && text[text.length - 1 - end] === other[other.length - 1 - end]) end++;
+  const middle = text.slice(start, text.length - end || undefined);
+  return <>{text.slice(0, start)}<mark>{middle || ' '}</mark>{end ? text.slice(-end) : ''}</>;
+}
 
-    setDiffResult(result);
-    setIsComparing(true);
-  };
+function DiffLine({ line, side }) {
+  const sign = line.kind === 'add' || (line.kind === 'change' && side === 'right') ? '+' :
+    line.kind === 'remove' || (line.kind === 'change' && side === 'left') ? '−' : '';
+  return <div className={`cdc-diff-line cdc-${line.kind} cdc-${side}`}>
+    <span className="cdc-diff-number" aria-hidden="true">{line.number ?? ''}</span>
+    <span className="cdc-diff-sign" aria-hidden="true">{sign}</span>
+    <code className="cdc-diff-code">{line.kind === 'change' ? highlightedText(line.text, line.other) : line.text || ' '}</code>
+  </div>;
+}
 
-  const insertExample = () => {
-    setOriginalCode(`function calculateTotal(items) {
-  let total = 0;
-  for (let i = 0; i < items.length; i++) {
-    total += items[i].price;
+function CodeEditor({ title, value, onChange }) {
+  const gutterRef = useRef(null);
+  const lineCount = Math.max(1, splitLines(value).length);
+  function handleKeyDown(event) {
+    if (event.key !== 'Tab') return;
+    event.preventDefault();
+    const input = event.currentTarget;
+    const position = input.selectionStart;
+    onChange(value.slice(0, position) + '  ' + value.slice(input.selectionEnd));
+    requestAnimationFrame(() => { input.selectionStart = input.selectionEnd = position + 2; });
   }
-  return total;
-}`);
-    setModifiedCode(`function calculateTotal(items) {
-  // Use reduce for cleaner code
-  return items.reduce((total, item) => {
-    return total + item.price;
-  }, 0);
-}`);
-    setIsComparing(false);
-  };
+  return <section className="cdc-editor" aria-label={`${title} code editor`}>
+    <div className="cdc-editor-head">
+      <div className="cdc-editor-title">
+        <span className={`cdc-version-icon ${title === 'Original' ? 'cdc-old' : 'cdc-new'}`}>{title === 'Original' ? 'A' : 'B'}</span>
+        <strong>{title}</strong><span className="cdc-editor-subtitle">{title === 'Original' ? 'Before' : 'After'}</span>
+      </div>
+      <span className="cdc-line-count">{lineCount} {lineCount === 1 ? 'line' : 'lines'}</span>
+    </div>
+    <div className="cdc-editor-body">
+      <div className="cdc-gutter" ref={gutterRef} aria-hidden="true">
+        {Array.from({ length: lineCount }, (_, index) => <div key={index}>{index + 1}</div>)}
+      </div>
+      <textarea
+        aria-label={`${title} code`}
+        spellCheck={false}
+        value={value}
+        placeholder={`Paste ${title.toLowerCase()} code here…`}
+        onChange={(event) => onChange(event.target.value)}
+        onKeyDown={handleKeyDown}
+        onScroll={(event) => { if (gutterRef.current) gutterRef.current.scrollTop = event.currentTarget.scrollTop; }}
+      />
+    </div>
+  </section>;
+}
 
-  const clearFields = () => {
-    setOriginalCode('');
-    setModifiedCode('');
-    setIsComparing(false);
-  };
+export default function CodeDiffChecker() {
+  const [original, setOriginal] = useState(exampleOriginal);
+  const [updated, setUpdated] = useState(exampleUpdated);
+  const [compared, setCompared] = useState({ original: exampleOriginal, updated: exampleUpdated });
+  const [view, setView] = useState('split');
+  const [copied, setCopied] = useState(false);
+  const [showTips, setShowTips] = useState(false);
+  const diff = useMemo(() => compareLines(compared.original, compared.updated), [compared]);
+  const dirty = original !== compared.original || updated !== compared.updated;
+  const hasContent = Boolean(compared.original || compared.updated);
+  const total = diff.additions + diff.removals + diff.changes;
 
-  return (
-    <div className="diff-checker-container">
-      <div className="diff-checker-header">
-        <div className="diff-checker-header-content">
-          <h2>Code Difference Checker</h2>
-          <p>Compare two text blocks side-by-side, exactly like diffchecker.com.</p>
-        </div>
-        
-        <div className="diff-checker-controls">
-          <button className="btn btn-outline" onClick={clearFields}>
-            <Icons.Trash2 size={16} />
-            Clear
-          </button>
-          {!isComparing && (
-            <button className="btn btn-outline" onClick={insertExample}>
-              <Icons.Wand2 size={16} />
-              Example
-            </button>
-          )}
-          
-          {isComparing ? (
-            <button className="btn btn-primary" onClick={() => setIsComparing(false)}>
-              <Icons.Edit2 size={16} />
-              Edit Text
-            </button>
-          ) : (
-            <button className="btn btn-primary" onClick={computeDiff}>
-              <Icons.GitCompare size={16} />
-              Find Difference
-            </button>
-          )}
+  function compare() {
+    setCompared({ original, updated });
+    setCopied(false);
+  }
+  function reset() {
+    setOriginal('');
+    setUpdated('');
+    setCompared({ original: '', updated: '' });
+    setCopied(false);
+  }
+  function loadExample() {
+    setOriginal(exampleOriginal);
+    setUpdated(exampleUpdated);
+    setCompared({ original: exampleOriginal, updated: exampleUpdated });
+    setCopied(false);
+  }
+  async function copyResult() {
+    try {
+      const patch = createPatch(compared.original, compared.updated);
+      await navigator.clipboard.writeText(patch);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2200);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return <div className="cdc" onKeyDown={(event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();
+      compare();
+    }
+  }}>
+    <div className="cdc-heading">
+      <div>
+        <p className="cdc-eyebrow">CODE TOOLS <span>/</span> COMPARISON</p>
+        <h1>Code Difference Checker</h1>
+        <p className="cdc-intro">Compare two versions of code and spot every change.</p>
+      </div>
+      <button className="cdc-help" onClick={() => setShowTips(!showTips)} aria-expanded={showTips}>
+        How it works <ChevronDown size={16} className={showTips ? 'cdc-up' : ''} />
+      </button>
+    </div>
+    {showTips && <div className="cdc-tip"><Sparkles size={18} /><span>Paste each version, then select <b>Compare code</b>. Your code stays in this browser tab. Use <b>Ctrl/⌘ + Enter</b> to compare quickly.</span></div>}
+
+    <div className="cdc-section-label"><span className="cdc-section-index">01</span><span>YOUR CODE</span><span className="cdc-section-rule" /></div>
+    <div className="cdc-editors">
+      <CodeEditor title="Original" value={original} onChange={setOriginal} />
+      <CodeEditor title="Updated" value={updated} onChange={setUpdated} />
+    </div>
+    <div className="cdc-action-row">
+      <span className="cdc-privacy"><span>●</span> Compared locally in your browser</span>
+      <div className="cdc-actions">
+        <button className="cdc-button cdc-secondary" onClick={loadExample}><Code2 size={16} /> Example</button>
+        <button className="cdc-button cdc-secondary" onClick={reset}><RotateCcw size={16} /> Reset</button>
+        <button className="cdc-button cdc-primary" onClick={compare}><ArrowDownUp size={17} /> Compare code</button>
+      </div>
+    </div>
+
+    <div className="cdc-section-label"><span className="cdc-section-index">02</span><span>DIFFERENCES</span><span className="cdc-section-rule" /></div>
+    <section className="cdc-results" aria-label="Comparison results">
+      <div className="cdc-results-toolbar">
+        <div className="cdc-results-title"><h2>Comparison result</h2><span className={`cdc-state ${dirty ? 'cdc-pending' : ''}`}>{dirty ? 'Edits not compared' : hasContent ? 'Up to date' : 'Ready to compare'}</span></div>
+        <div className="cdc-result-controls">
+          <div className="cdc-view-switch" role="group" aria-label="Comparison view">
+            <button aria-pressed={view === 'split'} className={view === 'split' ? 'cdc-active' : ''} onClick={() => setView('split')}><Columns2 size={16} /> Side by side</button>
+            <button aria-pressed={view === 'inline'} className={view === 'inline' ? 'cdc-active' : ''} onClick={() => setView('inline')}><CornerDownRight size={16} /> Inline</button>
+          </div>
+          <span className="cdc-control-divider" />
+          <button className="cdc-copy" disabled={!hasContent || dirty} onClick={copyResult}>{copied ? <Check size={16} /> : <Clipboard size={16} />}{copied ? 'Copied' : 'Copy diff'}</button>
         </div>
       </div>
-
-      {isComparing && (
-        <div className="view-mode-toggles diff-view-tabs">
-          <button 
-            className={`view-toggle ${viewMode === 'split' ? 'active' : ''}`}
-            onClick={() => setViewMode('split')}
-          >
-            Split View
-          </button>
-          <button 
-            className={`view-toggle ${viewMode === 'unified' ? 'active' : ''}`}
-            onClick={() => setViewMode('unified')}
-          >
-            Unified View
-          </button>
+      {hasContent ? <>
+        <div className="cdc-stats" aria-live="polite">
+          <span className="cdc-stat cdc-stat-added"><b>+{diff.additions}</b> added</span>
+          <span className="cdc-stat cdc-stat-removed"><b>−{diff.removals}</b> removed</span>
+          <span className="cdc-stat cdc-stat-changed"><b>~{diff.changes}</b> changed</span>
+          <span className="cdc-stat-summary">{total === 0 ? 'Both versions are identical' : `${total} ${total === 1 ? 'change' : 'changes'} found`}</span>
         </div>
-      )}
-
-      {!isComparing ? (
-        <div className="diff-checker-workspace">
-          <div className="editor-pane input-pane">
-            <div className="pane-header">
-              <h3>Original Text</h3>
-            </div>
-            <textarea
-              className="code-editor input"
-              value={originalCode}
-              onChange={(e) => setOriginalCode(e.target.value)}
-              placeholder="Paste original text here..."
-              spellCheck="false"
-            />
-          </div>
-
-          <div className="editor-pane input-pane">
-            <div className="pane-header">
-              <h3>Modified Text</h3>
-            </div>
-            <textarea
-              className="code-editor input"
-              value={modifiedCode}
-              onChange={(e) => setModifiedCode(e.target.value)}
-              placeholder="Paste modified text here..."
-              spellCheck="false"
-            />
-          </div>
+        <div className="cdc-diff-scroll">
+          {view === 'split' ? <div className="cdc-split-view">
+            <div className="cdc-column-head"><span>ORIGINAL</span><span>UPDATED</span></div>
+            {diff.rows.map((row, index) => <div className="cdc-split-row" key={index}><DiffLine line={row.left} side="left" /><DiffLine line={row.right} side="right" /></div>)}
+          </div> : <div className="cdc-inline-view">
+            <div className="cdc-inline-head">ORIGINAL → UPDATED</div>
+            {diff.rows.map((row, index) => <div key={index}>{row.left.kind === 'same' ? <DiffLine line={row.left} side="left" /> : <>
+              {row.left.kind !== 'blank' && <DiffLine line={row.left} side="left" />}
+              {row.right.kind !== 'blank' && <DiffLine line={row.right} side="right" />}
+            </>}</div>)}
+          </div>}
         </div>
-      ) : (
-        <div className="diff-result-section">
-           <div className="diff-output-container">
-              {diffResult.length === 0 ? (
-                <p className="empty-state">No differences found. The texts are identical.</p>
-              ) : viewMode === 'split' ? (
-                <div className="diff-split-view">
-                  <div className="diff-split-header">
-                    <div className="split-half">Original Text</div>
-                    <div className="split-half">Modified Text</div>
-                  </div>
-                  {diffResult.map((row, idx) => (
-                    <div className="diff-row" key={idx}>
-                      <div className={`diff-cell left ${row.left.type}`}>
-                         <div className="line-num">{row.left.lineNum || ''}</div>
-                         <div className="line-code">
-                           <span className="line-marker">
-                             {row.left.type === 'removed' ? '-' : row.left.type === 'added' ? '+' : ' '}
-                           </span>
-                           {row.left.value || ' '}
-                         </div>
-                      </div>
-                      <div className={`diff-cell right ${row.right.type}`}>
-                         <div className="line-num">{row.right.lineNum || ''}</div>
-                         <div className="line-code">
-                           <span className="line-marker">
-                             {row.right.type === 'removed' ? '-' : row.right.type === 'added' ? '+' : ' '}
-                           </span>
-                           {row.right.value || ' '}
-                         </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="diff-unified-view">
-                  {diffResult.map((row, idx) => {
-                    const elements = [];
-                    if (row.left.type === 'removed') {
-                       elements.push(
-                         <div className="diff-unified-row removed" key={`del-${idx}`}>
-                           <div className="line-nums">
-                              <span className="line-num">{row.left.lineNum}</span>
-                              <span className="line-num"></span>
-                           </div>
-                           <div className="line-code">
-                             <span className="line-marker">-</span>
-                             {row.left.value || ' '}
-                           </div>
-                         </div>
-                       );
-                    }
-                    if (row.right.type === 'added') {
-                       elements.push(
-                         <div className="diff-unified-row added" key={`add-${idx}`}>
-                           <div className="line-nums">
-                              <span className="line-num"></span>
-                              <span className="line-num">{row.right.lineNum}</span>
-                           </div>
-                           <div className="line-code">
-                             <span className="line-marker">+</span>
-                             {row.right.value || ' '}
-                           </div>
-                         </div>
-                       );
-                    }
-                    if (row.left.type === 'unchanged' && row.right.type === 'unchanged') {
-                       elements.push(
-                         <div className="diff-unified-row unchanged" key={`unchanged-${idx}`}>
-                           <div className="line-nums">
-                              <span className="line-num">{row.left.lineNum}</span>
-                              <span className="line-num">{row.right.lineNum}</span>
-                           </div>
-                           <div className="line-code">
-                             <span className="line-marker"> </span>
-                             {row.left.value || ' '}
-                           </div>
-                         </div>
-                       );
-                    }
-                    return elements;
-                  })}
-                </div>
-              )}
-           </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default CodeDiffChecker;
+      </> : <div className="cdc-empty"><div className="cdc-empty-icon"><Code2 size={24} /></div><h3>No comparison yet</h3><p>Paste code in both editors and select Compare code to see the differences.</p></div>}
+    </section>
+  </div>;
+}
