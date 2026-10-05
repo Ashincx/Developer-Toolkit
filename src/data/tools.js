@@ -118,6 +118,14 @@ export const tools = [
     category: 'Responsive Tools',
     path: '/device-preview',
     icon: 'Smartphone'
+  },
+  {
+    id: 'video-downloader',
+    name: 'Video Downloader',
+    description: 'Download video files from supported public sources.',
+    category: 'Utilities',
+    path: '/video-downloader',
+    icon: 'Download'
   }
 ];
 

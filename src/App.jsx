@@ -18,6 +18,7 @@ import CSSClipPathGenerator from './pages/tools/CSSClipPathGenerator';
 import CSSGradientMeshGenerator from './pages/tools/CSSGradientMeshGenerator';
 import FileFormatConverter from './pages/tools/FileFormatConverter';
 import CodeDiffChecker from './pages/tools/CodeDiffChecker';
+import VideoDownloader from './pages/tools/VideoDownloader/VideoDownloader';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -49,6 +50,7 @@ function App() {
             <Route path="/mesh-gradient" element={<CSSGradientMeshGenerator />} />
             <Route path="/file-converter" element={<FileFormatConverter />} />
             <Route path="/code-diff-checker" element={<CodeDiffChecker />} />
+            <Route path="/video-downloader" element={<VideoDownloader />} />
           </Routes>
         </div>
       </main>
