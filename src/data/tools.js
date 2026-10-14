@@ -1,5 +1,13 @@
 export const tools = [
   {
+    id: 'svg-animation',
+    name: 'SVG Animation Creator',
+    description: 'Design, animate, timeline, and export production-ready animated SVGs with keyframes.',
+    category: 'CSS Tools',
+    path: '/svg-animation',
+    icon: 'Sparkles'
+  },
+  {
     id: 'color-filter',
     name: 'Color Filter Generator',
     description: 'Convert monochrome icons into any target color using CSS filters.',

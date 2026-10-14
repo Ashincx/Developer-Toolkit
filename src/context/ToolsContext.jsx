@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
 const ToolsContext = createContext();
 
@@ -21,20 +21,21 @@ export const ToolsProvider = ({ children }) => {
     localStorage.setItem('recent', JSON.stringify(recent));
   }, [recent]);
 
-  const toggleFavorite = (toolId) => {
+  const toggleFavorite = useCallback((toolId) => {
     setFavorites(prev => 
       prev.includes(toolId) 
         ? prev.filter(id => id !== toolId)
         : [...prev, toolId]
     );
-  };
+  }, []);
 
-  const addRecent = (toolId) => {
+  const addRecent = useCallback((toolId) => {
     setRecent(prev => {
+      if (prev[0] === toolId) return prev;
       const filtered = prev.filter(id => id !== toolId);
       return [toolId, ...filtered].slice(0, 10); // Keep max 10 recent
     });
-  };
+  }, []);
 
   return (
     <ToolsContext.Provider value={{ favorites, toggleFavorite, recent, addRecent }}>

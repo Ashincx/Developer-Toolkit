@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Heart, Undo2, Redo2, Save, Download, RotateCcw } from 'lucide-react';
 import { useTools } from '../context/ToolsContext';
 import './ToolLayout.css';
@@ -16,11 +17,11 @@ const ToolLayout = ({
   const { favorites, toggleFavorite, addRecent } = useTools();
   const isFavorite = favorites.includes(id);
 
-  import('react').then(({ useEffect }) => {
-    useEffect(() => {
+  useEffect(() => {
+    if (id && addRecent) {
       addRecent(id);
-    }, [id, addRecent]);
-  });
+    }
+  }, [id, addRecent]);
 
   return (
     <div className="tool-layout">

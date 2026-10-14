@@ -19,6 +19,7 @@ import CSSGradientMeshGenerator from './pages/tools/CSSGradientMeshGenerator';
 import FileFormatConverter from './pages/tools/FileFormatConverter';
 import CodeDiffChecker from './pages/tools/CodeDiffChecker';
 import VideoDownloader from './pages/tools/VideoDownloader/VideoDownloader';
+import SVGAnimationCreator from './pages/tools/SVGAnimationCreator/SVGAnimationCreator';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -35,6 +36,7 @@ function App() {
         <div className="content-area">
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/svg-animation" element={<SVGAnimationCreator />} />
             <Route path="/css-filter" element={<CSSFilterGenerator />} />
             <Route path="/color-filter" element={<ColorFilterGenerator />} />
             <Route path="/box-shadow" element={<BoxShadowGenerator />} />
