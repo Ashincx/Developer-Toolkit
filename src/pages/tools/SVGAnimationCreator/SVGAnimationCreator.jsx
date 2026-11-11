@@ -47,8 +47,8 @@ export default function SVGAnimationCreator() {
   // Left Sidebar Tab ('presets' or 'layers')
   const [leftTab, setLeftTab] = useState('presets');
 
-  // Playback state
-  const [isPlaying, setIsPlaying] = useState(true);
+  // Playback state (defaults to paused so keyframes don't run automatically on tool open)
+  const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
@@ -115,16 +115,30 @@ export default function SVGAnimationCreator() {
   // Animation Playback Engine (requestAnimationFrame loop)
   const animFrameRef = useRef(null);
   const lastTimeRef = useRef(performance.now());
+  const lastUpdateRef = useRef(0);
 
   useEffect(() => {
+    // Only run rAF loop when actually playing and not scrubbing
+    if (!isPlaying || isScrubbing) {
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
+      return;
+    }
+
     const loop = (now) => {
       const delta = (now - lastTimeRef.current) / 1000;
       lastTimeRef.current = now;
 
-      if (isPlaying && !isScrubbing) {
-        setCurrentTime((prev) => {
-          const next = prev + delta * playbackSpeed;
-          return next >= totalDuration ? 0 : next;
+      // Throttle timeline UI updates (~30fps) to keep event loop responsive
+      if (now - lastUpdateRef.current >= 33) {
+        lastUpdateRef.current = now;
+        React.startTransition(() => {
+          setCurrentTime((prev) => {
+            const next = prev + delta * playbackSpeed;
+            return next >= totalDuration ? 0 : next;
+          });
         });
       }
 
@@ -132,10 +146,14 @@ export default function SVGAnimationCreator() {
     };
 
     lastTimeRef.current = performance.now();
+    lastUpdateRef.current = performance.now();
     animFrameRef.current = requestAnimationFrame(loop);
 
     return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current);
+        animFrameRef.current = null;
+      }
     };
   }, [isPlaying, isScrubbing, playbackSpeed, totalDuration]);
 
@@ -421,6 +439,7 @@ export default function SVGAnimationCreator() {
               selectedElementId={selectedElementId}
               onSelectElement={setSelectedElementId}
               playbackSpeed={playbackSpeed}
+              isPlaying={isPlaying}
               isScrubbing={isScrubbing}
               scrubTime={currentTime}
               hiddenLayers={hiddenLayers}

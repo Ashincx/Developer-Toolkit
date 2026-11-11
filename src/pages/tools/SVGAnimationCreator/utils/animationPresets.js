@@ -438,6 +438,7 @@ export function generateStylesCSS(animations, options = {}) {
     scopeSelector = '',
     speed = 1,
     isScrubbing = false,
+    isPlaying = true,
     scrubTime = 0,
     includeReducedMotion = true
   } = options;
@@ -473,14 +474,15 @@ ${keyframeBody}
 }
 `;
 
-    // Calculate scrub delay if scrubbing
-    let playState = 'running';
+    // Calculate scrub delay if scrubbing or paused
+    let playState = isPlaying ? 'running' : 'paused';
     let delayCSS = `${effectiveDelay}s`;
 
-    if (isScrubbing) {
+    if (isScrubbing || !isPlaying) {
       playState = 'paused';
-      // When paused, negative animation-delay scrubs directly to that point in time
-      const offset = (scrubTime - effectiveDelay) % effectiveDuration;
+      // When paused, negative animation-delay aligns directly to that point in time
+      const timeOffset = isScrubbing ? scrubTime : (scrubTime || 0);
+      const offset = (timeOffset - effectiveDelay) % effectiveDuration;
       delayCSS = `-${Math.max(0, offset)}s`;
     }
 

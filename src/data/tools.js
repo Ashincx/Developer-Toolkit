@@ -1,13 +1,5 @@
 export const tools = [
   {
-    id: 'svg-animation',
-    name: 'SVG Animation Creator',
-    description: 'Design, animate, timeline, and export production-ready animated SVGs with keyframes.',
-    category: 'CSS Tools',
-    path: '/svg-animation',
-    icon: 'Sparkles'
-  },
-  {
     id: 'color-filter',
     name: 'Color Filter Generator',
     description: 'Convert monochrome icons into any target color using CSS filters.',
@@ -38,6 +30,14 @@ export const tools = [
     category: 'Utilities',
     path: '/file-converter',
     icon: 'FileDown'
+  },
+  {
+    id: 'svg-animation',
+    name: 'SVG Animation Creator',
+    description: 'Design, animate, timeline, and export production-ready animated SVGs with keyframes.',
+    category: 'CSS Tools',
+    path: '/svg-animation',
+    icon: 'Sparkles'
   },
   {
     id: 'box-shadow',
@@ -126,6 +126,14 @@ export const tools = [
     category: 'Responsive Tools',
     path: '/device-preview',
     icon: 'Smartphone'
+  },
+  {
+    id: 'safari-inspector',
+    name: 'Safari Inspector Studio',
+    description: 'Inspect WebKit rendering, debug mobile layouts and compare Safari-like behavior with Chrome.',
+    category: 'Responsive Tools',
+    path: '/safari-inspector',
+    icon: 'ScanSearch'
   },
   {
     id: 'video-downloader',

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useMemo } from 'react';
 import {
   ZoomIn,
   ZoomOut,
@@ -16,12 +16,13 @@ const BG_PRESETS = [
   { id: 'light', label: 'Light', value: '#ffffff' }
 ];
 
-export default function SVGCanvas({
+function SVGCanvas({
   svgString,
   animations,
   selectedElementId,
   onSelectElement,
   playbackSpeed = 1,
+  isPlaying = false,
   isScrubbing = false,
   scrubTime = 0,
   hiddenLayers = new Set()
@@ -117,14 +118,18 @@ export default function SVGCanvas({
     setHoveredElementId(null);
   }, []);
 
-  // Compute CSS styles for animations
-  const generatedCSS = generateStylesCSS(animations, {
-    scopeSelector: '.canvas-svg-mount',
-    speed: playbackSpeed,
-    isScrubbing,
-    scrubTime,
-    includeReducedMotion: false
-  });
+  // Compute CSS styles for animations (memoized to prevent style recalculation thrashing)
+  const effectiveScrubTime = (isScrubbing || !isPlaying) ? scrubTime : 0;
+  const generatedCSS = useMemo(() => {
+    return generateStylesCSS(animations, {
+      scopeSelector: '.canvas-svg-mount',
+      speed: playbackSpeed,
+      isScrubbing,
+      isPlaying,
+      scrubTime: effectiveScrubTime,
+      includeReducedMotion: false
+    });
+  }, [animations, playbackSpeed, isScrubbing, isPlaying, effectiveScrubTime]);
 
   // Generate highlight and hidden styles
   let interactionCSS = '';
@@ -288,3 +293,5 @@ export default function SVGCanvas({
     </div>
   );
 }
+
+export default React.memo(SVGCanvas);

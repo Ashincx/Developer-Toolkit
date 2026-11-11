@@ -48,9 +48,11 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
-.search-icon {
+.search-container .search-icon {
+  position: static;
   color: var(--text-secondary);
   margin-right: 0.75rem;
+  flex-shrink: 0;
 }
 
 .search-input {

@@ -11,7 +11,7 @@ import {
   Sparkles
 } from 'lucide-react';
 
-export default function TopToolbar({
+function TopToolbar({
   projectName,
   setProjectName,
   canUndo,
@@ -137,3 +137,5 @@ export default function TopToolbar({
     </header>
   );
 }
+
+export default React.memo(TopToolbar);

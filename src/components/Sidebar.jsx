@@ -1,9 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import { tools, categories } from '../data/tools';
-import { Settings, Home, X } from 'lucide-react';
+import { useTools } from '../context/ToolsContext';
+import { Home, X } from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
+  const { activeTools = [] } = useTools();
+
   const handleClose = () => {
     if (setIsOpen) setIsOpen(false);
   };
@@ -35,22 +37,20 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
         <div className="nav-section">
           <ul className="nav-list">
-            {tools.map(tool => (
+            {activeTools.map(tool => (
               <li key={tool.id}>
                 <NavLink to={tool.path} className={({isActive}) => isActive ? 'nav-item active' : 'nav-item'} onClick={handleClose}>
                   <span>{tool.name}</span>
+                  {tool.status === 'testing' && (
+                    <span style={{ fontSize: '9px', fontWeight: 700, background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', padding: '1px 5px', borderRadius: '4px', marginLeft: 'auto', textTransform: 'uppercase' }}>
+                      Test
+                    </span>
+                  )}
                 </NavLink>
               </li>
             ))}
           </ul>
         </div>
-      </div>
-      
-      <div className="sidebar-footer">
-        <NavLink to="/settings" className="nav-item" onClick={handleClose}>
-          <Settings size={18} />
-          <span>Settings</span>
-        </NavLink>
       </div>
     </aside>
     </>

@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test:inspector": "node test-inspector.js",
+    "test": "node test-inspector.js"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +18,10 @@
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "ffmpeg-static": "^5.3.0",
+    "pixelmatch": "^8.0.0",
+    "playwright": "^1.64.1",
+    "pngjs": "^7.0.0",
+    "ws": "^8.22.0",
     "youtube-dl-exec": "^3.1.17"
   }
 }

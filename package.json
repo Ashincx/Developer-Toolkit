@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "backend": "node --watch backend/index.js",
+    "dev:all": "node -e \"const cp = require('child_process'); cp.spawn('node', ['backend/index.js'], { stdio: 'inherit', shell: true }); cp.spawn('npx', ['vite'], { stdio: 'inherit', shell: true });\"",
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview"

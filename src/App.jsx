@@ -20,6 +20,8 @@ import FileFormatConverter from './pages/tools/FileFormatConverter';
 import CodeDiffChecker from './pages/tools/CodeDiffChecker';
 import VideoDownloader from './pages/tools/VideoDownloader/VideoDownloader';
 import SVGAnimationCreator from './pages/tools/SVGAnimationCreator/SVGAnimationCreator';
+import SafariInspector from './pages/tools/SafariInspector/SafariInspector';
+import Admin from './pages/Admin';
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -53,6 +55,9 @@ function App() {
             <Route path="/file-converter" element={<FileFormatConverter />} />
             <Route path="/code-diff-checker" element={<CodeDiffChecker />} />
             <Route path="/video-downloader" element={<VideoDownloader />} />
+            <Route path="/safari-inspector" element={<SafariInspector />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/settings" element={<Admin />} />
           </Routes>
         </div>
       </main>

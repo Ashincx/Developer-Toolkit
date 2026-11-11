@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ToolLayout from '../../components/ToolLayout';
-import { Monitor, Smartphone, Tablet, ExternalLink, RefreshCw } from 'lucide-react';
+import { Monitor, Smartphone, Tablet, ExternalLink, RefreshCw, ScanSearch } from 'lucide-react';
 import './DevicePreview.css';
 
 const devices = [
@@ -10,6 +11,7 @@ const devices = [
 ];
 
 const DevicePreview = () => {
+  const navigate = useNavigate();
   const [url, setUrl] = useState('https://example.com');
   const [width, setWidth] = useState(375);
   const [height, setHeight] = useState(667);
@@ -128,6 +130,21 @@ const DevicePreview = () => {
 
           <button onClick={handleReset} className="btn btn-outline" style={{ marginTop: '1rem', width: '100%' }}>
             <RefreshCw size={14} /> Reset
+          </button>
+
+          <button 
+            onClick={() => {
+              const params = new URLSearchParams();
+              if (url) params.set('url', url);
+              if (width) params.set('width', width);
+              if (height) params.set('height', height);
+              navigate(`/safari-inspector?${params.toString()}`);
+            }} 
+            className="btn btn-primary" 
+            style={{ marginTop: '0.75rem', width: '100%' }}
+            title="Inspect in Safari with WebKit engine"
+          >
+            <ScanSearch size={16} /> Inspect in Safari
           </button>
         </div>
 
